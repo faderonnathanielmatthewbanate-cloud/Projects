@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Website Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <style>
+      [data-aos] {
+        pointer-events: auto;
+      }
+    </style>
+</head>
+<body>
+
+    <video  autoplay muted loop playsinline class="back-vedio" >
+                    <source src="img/Background.mp4" type="video/mp4">
+                </video>
+                
+    <div class="hero-header">
+        <div class="wrapper">
+            <header>
+                <div class="logo" data-aos="zoom-in" data-aos-duration="1000">
+                    <i class="fa-solid fa-n"></i>
+                    <div class="logo-text">
+                        <h2>Nathaniel <span class="">Faderon</span></h2>
+                    </div>
+                </div>
+                <nav>
+                    <div class="togglebtn" data-aos="fade-down" data-aos-duration="1000" data-aos-delay="500">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <ul class="navlinks">
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="100"><a href="index.html">Home</a></li>
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200"><a href="about.html">About</a></li>
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="300"><a href="skills.html">Skills</a></li>
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="400"><a href="education.html">Education</a></li>
+                        <li class="contact-btn" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="500"><a href="contact.html">Contact Me</a></li>
+                    </ul>
+                </nav>
+
+            </header>
+            <div class="container">
+                <div class="hero-pic" data-aos="zoom-in-right" data-aos-duration="2500">
+                    <img src="img/black.png" alt="profile pic">
+                </div>
+                <div class="hero-text">
+                   <h2 data-aos="fade-left" data-aos-duration="1000" data-aos-delay="800">Hey I'm <span class="">Broke!</span></h2>
+                   <h5 data-aos="fade-right" data-aos-duration="1000" data-aos-delay="900">pogi <span class="input"></span></h5>
+                    <p data-aos="flip-up" data-aos-duration="1000" data-aos-delay="1000">Coding by day, gaming by night, driving to save time, and mewing to look sharp in the photo on my diploma. Sobrang hirap maging engineering student, but for that future game project? Kaya pa! 💪. pogi 10 kyaw.
+                    </p>
+
+                     <h1 data-aos="zoom-in-down" data-aos-duration="1000" data-aos-delay="800" style="color: white; margin-top: 1rem; margin-bottom: 1rem;">My Gcash #</h1>
+                        <p data-aos="zoom-in" data-aos-duration="1000" data-aos-delay="1200" style="color: white; font-size: 2rem;">0965.......</p>
+                    <div class="social" data-aos="flip-down" data-aos-duration="1000" data-aos-delay="1300">
+                        <a href="#"><i class="fa-brands fa-facebook"></i></a>
+                        <a href="#"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#"><i class="fa-brands fa-github"></i></a>
+                        <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                    </div>
+      <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>
+    AOS.init({offset:0});
+  </script>
+
+    <!-- Typed.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.10/typed.min.js"></script>
+    <script>
+        /*Button click to Hide Nav Bar*/
+        var togglebtn=document.querySelector(".togglebtn");
+        var nav=document.querySelector(".navlinks");
+        var links=document.querySelectorAll(".navlinks li");
+        
+        togglebtn.addEventListener("click", function(){
+            this.classList.toggle("click");
+            nav.classList.toggle("open");
+            links.forEach(function(link){
+                link.classList.toggle("fade");
+            });
+        });
+
+        var typed=new Typed(".input", {
+            strings: ["Send gcash","please ket 10kyaw lng", "pogi cge na", "50kyaw", "uwu"],
+            typeSpeed: 55,
+            backSpeed: 35,
+            loop: true
+        })
+    </script>
+    
+</body>
+</html>

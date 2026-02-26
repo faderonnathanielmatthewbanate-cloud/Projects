@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Website Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <style>
+      [data-aos] {
+        pointer-events: auto;
+      }
+      
+    </style>
+</head>
+<body>
+
+    <video  autoplay muted loop playsinline class="back-vedio" >
+                    <source src="img/Background.mp4" type="video/mp4">
+                </video>
+                
+    <div class="hero-header">
+        <div class="wrapper">
+            <header>
+                <div class="logo" data-aos="zoom-in" data-aos-duration="1000">
+                    <i class="fa-solid fa-n"></i>
+                    <div class="logo-text">
+                        <h2>Nathaniel <span class="">Faderon</span></h2>
+                    </div>
+                </div>
+                <nav>
+                    <div class="togglebtn" data-aos="fade-down" data-aos-duration="1000" data-aos-delay="500">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <ul class="navlinks">
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="100"><a href="index.html">Home</a></li>
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200"><a href="about.html">About</a></li>
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="300"><a href="skills.html">Skills</a></li>
+                        <li data-aos="fade-up" data-aos-duration="1000" data-aos-delay="400"><a href="education.html">Education</a></li>
+                        <li class="contact-btn" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="500"><a href="contact.html">Contact Me</a></li>
+                    </ul>
+                </nav>
+
+            </header>
+            <div class="container">
+                <div class="hero-pic" data-aos="zoom-in-right" data-aos-duration="2500">
+                    <img src="img/dog-have-any-questions.gif" alt="profile pic">
+                </div>
+                <div class="hero-text">
+                   <h2 data-aos="fade-left" data-aos-duration="1000" data-aos-delay="800">About <span class="">Me!</span></h2>
+                    <p data-aos="flip-up" data-aos-duration="1000" data-aos-delay="1000" style="color: white; margin-top: 1rem; margin-bottom: 1rem;">I am a 18-year-old aspiring developer with a deep passion for crafting stunning, functional websites. While my current focus is mastering various programming languages, my ultimate goal is to bridge the gap between web development and interactive entertainment by launching my first major game project.</p>
+                    
+                    <section data-aos="fade-up" data-aos-duration="1200" data-aos-delay="1100">
+                        <h1 style="color: white; margin-top: 1rem; margin-bottom: 1rem;">My Journey</h1>
+                        <p data-aos="zoom-in" data-aos-duration="1000" data-aos-delay="1200" style="color: white;">My story began in the province of Sultan Kudarat, Mindanao, where I grew up and laid my academic foundations:</p>
+                        <ul data-aos="zoom-in-right" data-aos-duration="1200" data-aos-delay="1300" style="color: white;">
+                            <li data-aos="slide-right" data-aos-duration="800" data-aos-delay="1350">Elementary: B. Venus Elementary School</li>
+                            <li data-aos="slide-right" data-aos-duration="800" data-aos-delay="1450">Junior & Senior High: Bai Saripinang National High School</li>
+                        </ul>
+                        <p data-aos="fade-up" data-aos-duration="1000" data-aos-delay="1500" style="color: white; margin-bottom: 1rem;">Currently, I reside in Payatas and am pursuing a Bachelor's degree in Computer Engineering at Colegio de Montalban.</p>
+                    </section>
+                    
+                    <section data-aos="fade-up" data-aos-duration="1200" data-aos-delay="1600">
+                        <h1 style="color: white; margin-top: 1rem; margin-bottom: 1rem;">Current Focus & Drive</h1>
+                        <p data-aos="fade-in" data-aos-duration="1200" data-aos-delay="1700" style="color: white;">I am a firm believer in continuous growth. Whether it's refining my front-end skills or diving into the complexities of computer engineering, I am constantly striving to develop a versatile toolkit. For me, coding isn't just about syntax—it's about building the skills necessary to navigate life and create technology that makes an impact.</p>
+                        <blockquote data-aos="zoom-in-up" data-aos-duration="1200" data-aos-delay="1800" style="color: white; margin-top: 1rem; margin-bottom: 1rem; text-align: center; font-size: 1.25rem;">"I'm not just learning to code; I'm learning to build the future I've imagined."</blockquote>
+                    </section>
+                </div>
+
+      <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>
+    AOS.init({offset:0});
+  </script>
+
+    <!-- Typed.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.10/typed.min.js"></script>
+    <script>
+        /*Button click to Hide Nav Bar*/
+        var togglebtn=document.querySelector(".togglebtn");
+        var nav=document.querySelector(".navlinks");
+        var links=document.querySelectorAll(".navlinks li");
+        
+        togglebtn.addEventListener("click", function(){
+            this.classList.toggle("click");
+            nav.classList.toggle("open");
+            links.forEach(function(link){
+                link.classList.toggle("fade");
+            });
+        });
+
+        var typed=new Typed(".input", {
+            strings: ["Beginner Coder","Web Developer", "Designer", "Freelancer", "Sleeper"],
+            typeSpeed: 55,
+            backSpeed: 35,
+            loop: true
+        })
+    </script>
+    
+</body>
+</html>
