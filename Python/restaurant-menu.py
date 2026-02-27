@@ -283,7 +283,7 @@ def customer_menu():
 
 def main():
     print("\n" + "-" * 51)
-    print("             Welcome to Jolli-Bae            ")
+    print("             Welcome To Jolli-Bae            ")
     print("-" * 51)
 
     while True:
