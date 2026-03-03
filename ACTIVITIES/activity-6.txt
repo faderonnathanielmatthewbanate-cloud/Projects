@@ -1,0 +1,16 @@
+# ACTIVITY 6 - INHERITANCE
+
+class Matheos:
+    def __init__(self, name):
+        self.name = name
+        
+    def introduce(self):
+        print(f"Hello, my name is {self.name}.")
+
+class Student(Matheos):
+    def study(self):
+        print(f"{self.name} is studying.")
+
+S1 = Student("Matheos")
+S1.introduce()
+S1.study()

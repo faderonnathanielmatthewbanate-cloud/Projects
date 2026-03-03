@@ -1,0 +1,24 @@
+# ACTIVITY 5 - ABSTRACTION
+
+from abc import ABC, abstractmethod
+
+class Car(ABC):          
+    @abstractmethod
+    def start(self):    
+        pass
+
+class Engine(Car):
+    def start(self):
+        print("Uses key to start the engine.")
+        
+class MyCar(Car):
+    def start(self):
+        print("The car starts.")
+
+v1 = Engine()
+v1.start()
+
+v2 = MyCar()
+v2.start()
+
+

@@ -1,0 +1,20 @@
+# ACTIVITY 4 - ENCAPSULATION
+
+class Meong:
+    def __init__(self, name, grade):
+        self.name = name
+        self.grade = grade
+    
+    def get_grade(self):
+        return self.grade
+    
+    def set_grade(self, grade):
+        if 0 <= grade <= 100:
+            self.grade = grade
+        else:
+            print("Invalid grade. Please enter a grade between 0 and 100.")
+
+meong1 = Meong("Lipbite", 85)
+print("meong1 Initial grade:", meong1.get_grade())
+meong1.set_grade(90)
+print("meong1 Final grade:", meong1.get_grade())

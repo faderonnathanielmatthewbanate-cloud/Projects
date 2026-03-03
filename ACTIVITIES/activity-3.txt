@@ -1,0 +1,30 @@
+# Activity 3 - Animal Class
+class Animal:
+    def __init__(self, name, species):
+        self.name = name
+        self.species = species
+
+    def make_sound(self, sound):
+        print(f"{self.name} the {self.species} says: {sound}")
+
+class Dinasure(Animal):
+    def make_sound(self):
+        if self.species == "Dinasure":
+            print("Dino - ÑRawr! Rawr!")
+
+class Elepanti(Animal):
+    def make_sound(self):
+        if self.species == "Elepanti":
+            print("Ellie - uaahhauahauha!")
+
+class Giraffo(Animal):
+    def make_sound(self):
+        if self.species == "Giraffo":
+            print("Gigi - ujtjaiiiiiiiii!!!")
+        else:
+            print("Some generic animal sound.")
+
+animals = [Dinasure("Dino", "Dinasure"), Elepanti("Ellie", "Elepanti"), Giraffo("Gigi", "Giraffo")]
+for animal in animals:
+        animal.make_sound()
+
