@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+
+# ANSI Color Codes
+RESET  = "\033[0m"
+BOLD   = "\033[1m"
+
+RED     = "\033[31m"
+YELLOW  = "\033[33m"
+WHITE   = "\033[37m"
+CYAN    = "\033[36m"
+GREEN   = "\033[32m"
+
+BG_RED    = "\033[41m"
+BG_YELLOW = "\033[43m"
+BG_BLACK  = "\033[40m"
+
+BRIGHT_RED    = "\033[38;5;196m"
+BRIGHT_YELLOW = "\033[38;5;226m"
+ORANGE        = "\033[38;5;214m"
+CREAM         = "\033[38;5;230m"
+LIGHT_RED     = "\033[38;5;203m"
+
+WIDTH = 60
+
+def center(text, width=WIDTH):
+    return text.center(width)
+
+def divider(char="═", color=BRIGHT_YELLOW):
+    return f"{color}{char * WIDTH}{RESET}"
+
+def print_header():
+    print()
+    print(f"{BG_RED}{BRIGHT_YELLOW}{BOLD}{'':^60}{RESET}")
+    print(f"{BG_RED}{BRIGHT_YELLOW}{BOLD}{'🐝  J O L L I B E E  🐝':^60}{RESET}")
+    print(f"{BG_RED}{BRIGHT_YELLOW}{BOLD}{'It\'s More Fun with Jollibee!':^60}{RESET}")
+    print(f"{BG_RED}{BRIGHT_YELLOW}{BOLD}{'':^60}{RESET}")
+    print(f"{BG_YELLOW}{BRIGHT_RED}{BOLD}{'★ LANGHAP-SARAP ★':^60}{RESET}")
+    print(f"{BG_YELLOW}{BRIGHT_RED}{BOLD}{'':^60}{RESET}")
+    print()
+
+def print_info():
+    print(divider("─", BRIGHT_YELLOW))
+    print(f"{BRIGHT_YELLOW}{BOLD}{center('📍 FIND A JOLLIBEE NEAR YOU')}{RESET}")
+    print(divider("─", BRIGHT_YELLOW))
+    print(f"  {WHITE}📌 Headquarters : {GREEN}Pasig City, Metro Manila, Philippines{RESET}")
+    print(f"  {WHITE}📞 Hotline       : {GREEN}1-800-10-JOLLIBEE (565-5423){RESET}")
+    print(f"  {WHITE}🌐 Website       : {CYAN}www.jollibee.com.ph{RESET}")
+    print(f"  {WHITE}📱 App           : {CYAN}Jollibee PH App (iOS & Android){RESET}")
+    print()
+    print(divider("─", BRIGHT_YELLOW))
+    print(f"{BRIGHT_YELLOW}{BOLD}{center('🕐 STORE HOURS')}{RESET}")
+    print(divider("─", BRIGHT_YELLOW))
+    print(f"  {GREEN}Monday - Sunday   : {WHITE}Open 24 Hours (select branches){RESET}")
+    print(f"  {ORANGE}Drive-Thru        : {WHITE}Available in most branches{RESET}")
+    print(f"  {CYAN}Delivery          : {WHITE}JollibeeDelivery.com.ph | GrabFood | Foodpanda{RESET}")
+    print()
+
+def print_menu():
+    print(divider("═", BRIGHT_RED))
+    print(f"{BRIGHT_RED}{BOLD}{center('🍗 OUR FAMOUS MENU 🍗')}{RESET}")
+    print(divider("═", BRIGHT_RED))
+    print()
+
+    # Chickenjoy
+    print(f"  {BRIGHT_YELLOW}{BOLD}── 🍗 CHICKENJOY ──{RESET}")
+    chickenjoy = [
+        ("1-pc Chickenjoy + Rice",         "₱109",  "Crispy, juicy fried chicken with gravy"),
+        ("2-pc Chickenjoy + Rice",         "₱189",  "Double the joy, double the crunch"),
+        ("Chickenjoy Bucket (6 pcs)",      "₱569",  "Perfect for sharing with the family"),
+        ("Chickenjoy Bucket (8 pcs)",      "₱739",  "More joy, more love ❤️"),
+    ]
+    for name, price, desc in chickenjoy:
+        print(f"  {CREAM}{name:<35}{RESET} {BRIGHT_YELLOW}{BOLD}{price}{RESET}")
+        print(f"  {ORANGE}   ↳ {desc}{RESET}")
+    print()
+
+    # Burger
+    print(f"  {BRIGHT_YELLOW}{BOLD}── 🍔 JOLLY BURGERS ──{RESET}")
+    burgers = [
+        ("Yumburger",                      "₱49",   "Classic Jollibee burger since 1978"),
+        ("Champ",                          "₱129",  "Big, beefy, and bold quarter-pounder"),
+        ("Bacon Cheeseburger",             "₱119",  "Smoky bacon with melted cheese"),
+    ]
+    for name, price, desc in burgers:
+        print(f"  {CREAM}{name:<35}{RESET} {BRIGHT_YELLOW}{BOLD}{price}{RESET}")
+        print(f"  {ORANGE}   ↳ {desc}{RESET}")
+    print()
+
+    # Palabok & Rice
+    print(f"  {BRIGHT_YELLOW}{BOLD}── 🍝 JOLLY SPAGHETTI & PALABOK ──{RESET}")
+    pasta = [
+        ("Jolly Spaghetti",                "₱79",   "Sweet-style spaghetti with chunky meat sauce"),
+        ("Palabok Fiesta",                 "₱129",  "Filipino-style noodles with shrimp gravy"),
+        ("Jolly Spaghetti Family Pan",     "₱369",  "Serves the whole barkada!"),
+    ]
+    for name, price, desc in pasta:
+        print(f"  {CREAM}{name:<35}{RESET} {BRIGHT_YELLOW}{BOLD}{price}{RESET}")
+        print(f"  {ORANGE}   ↳ {desc}{RESET}")
+    print()
+
+    # Breakfast
+    print(f"  {BRIGHT_YELLOW}{BOLD}── 🌅 JOLLY BREAKFAST ──{RESET}")
+    breakfast = [
+        ("Longsilog",                      "₱99",   "Longganisa, sinangag & itlog"),
+        ("Tapsilog",                       "₱109",  "Beef tapa, garlic rice & egg"),
+        ("Chicksilog",                     "₱119",  "Chickenjoy + garlic rice + egg"),
+    ]
+    for name, price, desc in breakfast:
+        print(f"  {CREAM}{name:<35}{RESET} {BRIGHT_YELLOW}{BOLD}{price}{RESET}")
+        print(f"  {ORANGE}   ↳ {desc}{RESET}")
+    print()
+
+    # Desserts & Drinks
+    print(f"  {BRIGHT_YELLOW}{BOLD}── 🍦 DESSERTS & DRINKS ──{RESET}")
+    desserts = [
+        ("Peach Mango Pie",                "₱49",   "Flaky crust with sweet peach-mango filling"),
+        ("Halo-Halo",                      "₱89",   "Classic Filipino shaved ice dessert"),
+        ("Jolly Sundae",                   "₱39",   "Creamy soft-serve with your choice of toppings"),
+        ("Iced Jollibee Kape",             "₱69",   "Smooth iced coffee, Jollibee style"),
+    ]
+    for name, price, desc in desserts:
+        print(f"  {CREAM}{name:<35}{RESET} {BRIGHT_YELLOW}{BOLD}{price}{RESET}")
+        print(f"  {ORANGE}   ↳ {desc}{RESET}")
+    print()
+
+def print_combos():
+    print(divider("*", ORANGE))
+    print(f"{ORANGE}{BOLD}{center('🎉 JOLLY COMBO DEALS 🎉')}{RESET}")
+    print(divider("*", ORANGE))
+    print(f"  {CYAN}🐝 {WHITE}Chickenjoy + Spaghetti + Drink  {BRIGHT_YELLOW}{BOLD}₱169{RESET}  {GREEN}(Save ₱30!){RESET}")
+    print(f"  {CYAN}🐝 {WHITE}Family Meal (8 Chickenjoy + 2 Rice)  {BRIGHT_YELLOW}{BOLD}₱799{RESET}")
+    print(f"  {CYAN}🐝 {WHITE}Kiddie Meal (Spaghetti + Drink + Toy) {BRIGHT_YELLOW}{BOLD}₱129{RESET}")
+    print(f"  {CYAN}🐝 {WHITE}Value Breakfast Combo              {BRIGHT_YELLOW}{BOLD}₱129{RESET}  {GREEN}(All-day){RESET}")
+    print()
+
+def print_jollibee_facts():
+    print(divider("─", BRIGHT_YELLOW))
+    print(f"{BRIGHT_YELLOW}{BOLD}{center('🐝 WHY FILIPINOS LOVE JOLLIBEE 🐝')}{RESET}")
+    print(divider("─", BRIGHT_YELLOW))
+    facts = [
+        ("Founded",       "1978 in Quezon City by Tony Tan Caktiong"),
+        ("Branches",      "1,500+ stores worldwide"),
+        ("Countries",     "Philippines, USA, Canada, UK, UAE, HK, SG & more"),
+        ("Signature",     "Crispy Chickenjoy — crispier outside, juicier inside"),
+        ("Icon",          "Jolly the Bee — the most beloved mascot in PH 🐝"),
+    ]
+    for label, value in facts:
+        print(f"  {BRIGHT_RED}{BOLD}{label:<14}{RESET}: {CREAM}{value}{RESET}")
+    print()
+
+def print_footer():
+    print(divider("═", BRIGHT_RED))
+    print(f"{BG_RED}{BRIGHT_YELLOW}{BOLD}{center('🐝 ORDER NOW! 🐝')}{RESET}")
+    print(f"{CREAM}{center('Delivery · Drive-Thru · Dine-In · Take-Out')}{RESET}")
+    print()
+    print(f"{BRIGHT_YELLOW}{BOLD}{center('📞  1-800-10-JOLLIBEE')}{RESET}")
+    print(f"{CYAN}{center('🌐  www.jollibee.com.ph')}{RESET}")
+    print(f"{ORANGE}{center('📱  Download the Jollibee App!')}{RESET}")
+    print()
+    print(f"{RED}{center('Follow us: @Jollibee on Facebook, Instagram & TikTok')}{RESET}")
+    print()
+    print(divider("═", BRIGHT_RED))
+    print(f"{BG_YELLOW}{BRIGHT_RED}{BOLD}{center('Bida ang SAYA! 🐝 Always in the best moments of your life.')}{RESET}")
+    print(divider("═", BRIGHT_RED))
+    print()
+
+def main():
+    print_header()
+    print_info()
+    print_menu()
+    print_combos()
+    print_jollibee_facts()
+    print_footer()
+
+if __name__ == "__main__":
+    main()
