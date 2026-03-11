@@ -1,0 +1,889 @@
+import os
+import sys
+import hashlib
+from abc import ABC, abstractmethod
+
+
+# ==============================================================================
+#  ABSTRACTION — Abstract base classes define contracts without implementations
+# ==============================================================================
+
+class Displayable(ABC):
+    """Abstract interface: anything that can display itself."""
+    @abstractmethod
+    def display(self):
+        pass
+
+
+class Authenticatable(ABC):
+    """Abstract interface: anything that supports authentication."""
+    @abstractmethod
+    def verify(self) -> bool:
+        pass
+
+    @abstractmethod
+    def change_passcode(self):
+        pass
+
+
+class SalesRecorder(ABC):
+    """Abstract interface: anything that records sales data."""
+    @abstractmethod
+    def record_sale(self, cart):
+        pass
+
+    @abstractmethod
+    def gross_profit(self) -> float:
+        pass
+
+    @abstractmethod
+    def profit_margin(self) -> float:
+        pass
+
+    @abstractmethod
+    def health_status(self) -> tuple:
+        pass
+
+
+class UIPanel(ABC):
+    """Abstract interface: any user-interface panel that can be run."""
+    @abstractmethod
+    def run(self):
+        pass
+
+
+# ==============================================================================
+#  ENCAPSULATION — Private attributes exposed only through controlled methods
+# ==============================================================================
+
+class MenuItem(Displayable):
+    """
+    ENCAPSULATION: Internal state (_stock, _sold) is private.
+    Public methods are the only way to read or modify them.
+    POLYMORPHISM: Overrides display() from Displayable.
+    """
+    def __init__(self, name: str, price: float, stock: int,
+                 restock_price: float, restock_qty: int):
+        self._name          = name
+        self._price         = price
+        self._stock         = stock          # encapsulated — use property
+        self._restock_price = restock_price
+        self._restock_qty   = restock_qty
+        self._sold          = 0              # encapsulated — use property
+
+    # ── Read-only properties (controlled access) ──────────────────────────────
+    @property
+    def name(self):          return self._name
+    @property
+    def price(self):         return self._price
+    @property
+    def stock(self):         return self._stock
+    @property
+    def restock_price(self): return self._restock_price
+    @property
+    def restock_qty(self):   return self._restock_qty
+    @property
+    def sold(self):          return self._sold
+
+    # ── Controlled mutation ───────────────────────────────────────────────────
+    def deduct(self, qty: int):
+        """Safely reduce stock; clamps to zero."""
+        self._stock = max(0, self._stock - qty)
+        self._sold += qty
+
+    def restock(self, qty: int):
+        """Add stock units."""
+        self._stock += qty
+
+    def restock_cost(self, qty: int = None) -> float:
+        qty = qty if qty is not None else self._restock_qty
+        return qty * self._restock_price
+
+    # ── Queries ───────────────────────────────────────────────────────────────
+    def is_available(self) -> bool:
+        return self._stock > 0
+
+    def get_status(self) -> str:
+        if self._stock == 0:      return "OUT OF STOCK"
+        elif self._stock <= 5:    return f"Low Stock ({self._stock} left)"
+        else:                     return f"In Stock ({self._stock})"
+
+    # ── POLYMORPHISM: Displayable contract ────────────────────────────────────
+    def display(self):
+        print(f"  {self._name:<40} P{self._price:>6}  {self.get_status()}")
+
+
+# ==============================================================================
+#  INHERITANCE — CartItem, Cart inherit / extend base behaviour
+# ==============================================================================
+
+class CartItem(Displayable):
+    """
+    INHERITANCE: Extends Displayable.
+    ENCAPSULATION: quantity managed through a setter with validation.
+    """
+    def __init__(self, menu_item: MenuItem, quantity: int):
+        self._menu_item = menu_item
+        self._quantity  = quantity
+
+    @property
+    def menu_item(self): return self._menu_item
+
+    @property
+    def quantity(self):  return self._quantity
+
+    @quantity.setter
+    def quantity(self, value: int):
+        if value <= 0:
+            raise ValueError("Quantity must be positive.")
+        self._quantity = value
+
+    def subtotal(self) -> float:
+        return self._menu_item.price * self._quantity
+
+    # ── POLYMORPHISM: each Displayable displays itself differently ─────────────
+    def display(self):
+        print(f"  {self._menu_item.name}")
+        print(f"     P{self._menu_item.price} x {self._quantity} = P{self.subtotal()}")
+
+
+class Cart(Displayable):
+    """
+    INHERITANCE: Extends Displayable.
+    ENCAPSULATION: _items list is private; mutated only via add/remove/set_quantity.
+    POLYMORPHISM: display() renders the full cart, distinct from CartItem.display().
+    """
+    def __init__(self):
+        self._items: list[CartItem] = []
+
+    @property
+    def items(self):
+        return list(self._items)          # return a copy — protect internals
+
+    def add(self, menu_item: MenuItem, quantity: int):
+        for ci in self._items:
+            if ci.menu_item.name == menu_item.name:
+                ci.quantity = ci.quantity + quantity
+                return
+        self._items.append(CartItem(menu_item, quantity))
+
+    def remove(self, index: int) -> CartItem:
+        return self._items.pop(index)
+
+    def set_quantity(self, index: int, qty: int):
+        self._items[index].quantity = qty
+
+    def total(self) -> float:
+        return sum(ci.subtotal() for ci in self._items)
+
+    def quantity_in_cart(self, item_name: str) -> int:
+        for ci in self._items:
+            if ci.menu_item.name == item_name:
+                return ci.quantity
+        return 0
+
+    def is_empty(self) -> bool:
+        return len(self._items) == 0
+
+    def clear(self):
+        self._items.clear()
+
+    # ── POLYMORPHISM: Cart's display() renders differently from CartItem ────────
+    def display(self):
+        print("\n" + "-" * 60)
+        print("                      SHOPPING CART                  ")
+        print("-" * 60)
+        for idx, ci in enumerate(self._items, 1):
+            print(f"{idx}.", end=" ")
+            ci.display()            # POLYMORPHISM: delegates to CartItem.display()
+        print("-" * 60)
+        print(f"TOTAL: P{self.total()}")
+        print("-" * 60)
+
+
+# ==============================================================================
+#  INHERITANCE + ABSTRACTION — SalesTracker implements SalesRecorder contract
+# ==============================================================================
+
+class SalesTracker(SalesRecorder):
+    """
+    INHERITANCE: Concrete subclass of abstract SalesRecorder.
+    ENCAPSULATION: Revenue and COGS are private; read via properties.
+    """
+    def __init__(self):
+        self._total_revenue = 0.0
+        self._total_cogs    = 0.0
+
+    @property
+    def total_revenue(self): return self._total_revenue
+    @property
+    def total_cogs(self):    return self._total_cogs
+
+    # ── Abstract method implementations ───────────────────────────────────────
+    def record_sale(self, cart: Cart):
+        self._total_revenue += cart.total()
+        for ci in cart.items:
+            self._total_cogs += ci.menu_item.restock_price * ci.quantity
+
+    def gross_profit(self) -> float:
+        return self._total_revenue - self._total_cogs
+
+    def profit_margin(self) -> float:
+        if self._total_revenue == 0:
+            return 0.0
+        return (self.gross_profit() / self._total_revenue) * 100
+
+    def health_status(self) -> tuple:
+        margin = self.profit_margin()
+        if self._total_revenue == 0:
+            return "NEUTRAL",       "No sales yet. Start selling to see financial health!"
+        elif margin >= 30:
+            return "HEALTHY",       "Business is HEALTHY - strong profit margin!"
+        elif margin >= 10:
+            return "STABLE",        "Business is STABLE - consider reducing costs."
+        elif margin > 0:
+            return "AT RISK",       "Business is AT RISK - margins are thin!"
+        else:
+            return "BANKRUPT RISK", "DANGER: Business is LOSING MONEY - act immediately!"
+
+
+# ==============================================================================
+#  ENCAPSULATION — Menu encapsulates category building & lookup
+# ==============================================================================
+
+class Menu(Displayable):
+    """
+    ENCAPSULATION: _categories dict is private; read-only access via methods.
+    POLYMORPHISM: display() shows categories, distinct from item display.
+    """
+    def __init__(self):
+        self._categories = {
+            1: ("Regular Meals",     self._build_regular()),
+            2: ("Combo Meals",       self._build_combo()),
+            3: ("Family Meals",      self._build_family()),
+            4: ("Party Meals",       self._build_party()),
+            5: ("Jolli-Saver Meals", self._build_saver()),
+        }
+
+    # ── Private factory helpers ───────────────────────────────────────────────
+    def _build_regular(self):
+        return [
+            MenuItem("1pc Chickenjoy w/ Rice",   95,  20, 50,  20),
+            MenuItem("2pc Chickenjoy w/ Rice",  180,  15, 95,  15),
+            MenuItem("1pc Spicy Chickenjoy",    100,  15, 55,  15),
+            MenuItem("1pc Burger Steak",         60,  20, 30,  20),
+            MenuItem("2pc Burger Steak",        115,  15, 60,  15),
+            MenuItem("Jolly Spaghetti Solo",     60,  25, 25,  25),
+            MenuItem("Palabok Fiesta Solo",     120,  20, 60,  20),
+            MenuItem("Yumburger Solo",           40,  30, 15,  30),
+            MenuItem("Cheesy Yumburger",         65,  20, 30,  20),
+            MenuItem("Tuna Pie (2pcs)",          90,  20, 40,  20),
+        ]
+
+    def _build_combo(self):
+        return [
+            MenuItem("C1: Chickenjoy + Drink",           115, 15, 60,  15),
+            MenuItem("C2: 2pc Chickenjoy + Drink",        200, 10, 100, 10),
+            MenuItem("C3: Chickenjoy + Spag + Drink",     160, 10, 80,  10),
+            MenuItem("C4: Chickenjoy + Palabok + Drink",  210, 10, 110, 10),
+            MenuItem("J1: Burger Steak + Spag + Drink",   130, 12, 65,  12),
+            MenuItem("S1: Spag + Yumburger + Drink",      110, 15, 55,  15),
+            MenuItem("S2: Spag + Fries + Drink",          105, 15, 50,  15),
+            MenuItem("B1: Yumburger + Fries + Drink",      95, 15, 45,  15),
+            MenuItem("B2: Cheesy Yum + Fries + Drink",    120, 12, 60,  12),
+            MenuItem("B3: Aloha Yum + Fries + Drink",     185, 10, 95,  10),
+        ]
+
+    def _build_family(self):
+        return [
+            MenuItem("6pc Chickenjoy Bucket",      450, 10, 240, 10),
+            MenuItem("8pc Chickenjoy Bucket",      590,  8, 310,  8),
+            MenuItem("6pc Spicy Bucket",           480,  8, 255,  8),
+            MenuItem("Family Pan Spaghetti",       250, 10, 120, 10),
+            MenuItem("Family Pan Palabok",         400,  8, 200,  8),
+            MenuItem("Chicken + Spag Family Meal", 550,  8, 280,  8),
+            MenuItem("Burger Steak Family Pan",    320,  8, 160,  8),
+            MenuItem("Bucket of Fries",            150, 15,  70, 15),
+            MenuItem("Peach Mango Pie 3-Pack",     130, 15,  60, 15),
+            MenuItem("Tuna Pie 3-Pack",            135, 15,  60, 15),
+        ]
+
+    def _build_party(self):
+        return [
+            MenuItem("Party Bundle A (12pc+2 Spag)",   1200, 5,  650, 5),
+            MenuItem("Party Bundle B (18pc+20 Yum)",   2500, 3, 1300, 3),
+            MenuItem("12pc Chickenjoy Bucket",          850, 5,  450, 5),
+            MenuItem("15pc Chickenjoy Bucket",         1050, 5,  560, 5),
+            MenuItem("Jolly Spaghetti Party Size",      650, 5,  320, 5),
+            MenuItem("Palabok Fiesta Party Size",       850, 5,  440, 5),
+            MenuItem("Burger Steak Party Tray (20pc)",  950, 5,  500, 5),
+            MenuItem("Pie Party Pack (12pcs)",          500, 5,  240, 5),
+            MenuItem("Sundae Party Set (10 cups)",      450, 5,  200, 5),
+            MenuItem("Mixed Bucket (6 Reg/6 Spicy)",    880, 5,  460, 5),
+        ]
+
+    def _build_saver(self):
+        return [
+            MenuItem("Budget Yumburger",            35, 30, 12, 30),
+            MenuItem("Jr. Burger Steak",            55, 25, 25, 25),
+            MenuItem("Jr. Jolly Spaghetti",         50, 25, 20, 25),
+            MenuItem("Fries & Coke Float",          75, 20, 35, 20),
+            MenuItem("Yumburger & Pineapple Juice", 70, 20, 30, 20),
+            MenuItem("Jolli-Hotdog",                60, 20, 25, 20),
+            MenuItem("Tuna Pie & Coffee",           80, 20, 35, 20),
+            MenuItem("Steak & Peach Mango Pie",     99, 15, 45, 15),
+            MenuItem("Rice & Extra Gravy Bowl",     30, 30, 10, 30),
+            MenuItem("Iced Barako & Yumburger",     85, 15, 38, 15),
+        ]
+
+    # ── Public API ────────────────────────────────────────────────────────────
+    def get_category(self, option: int):
+        return self._categories.get(option)
+
+    def all_items(self) -> list[MenuItem]:
+        items = []
+        for _, item_list in self._categories.values():
+            items.extend(item_list)
+        return items
+
+    # ── POLYMORPHISM: Menu's display() shows category list ────────────────────
+    def display(self):
+        for num, (name, _) in self._categories.items():
+            print(f"{num}. {name}")
+
+
+# ==============================================================================
+#  INHERITANCE + ABSTRACTION — AdminAuth implements Authenticatable
+# ==============================================================================
+
+class AdminAuth(Authenticatable):
+    """
+    INHERITANCE: Concrete subclass of abstract Authenticatable.
+    ENCAPSULATION: Password stored as a hash (_hash_val), never plain-text.
+    """
+    MAX_ATTEMPTS = 3
+
+    def __init__(self, default_passcode: str = "admin1234"):
+        self._hash_val = self._hash(default_passcode)
+
+    @staticmethod
+    def _hash(pw: str) -> str:
+        """Private — callers never see the hashing algorithm."""
+        return hashlib.sha256(pw.encode()).hexdigest()
+
+    # ── Abstract method implementations ───────────────────────────────────────
+    def verify(self) -> bool:
+        clear()
+        print("\n" + "-" * 50)
+        print("        ADMIN ACCESS - AUTHENTICATION        ")
+        print("-" * 50)
+        print("  Enter the admin passcode to continue.\n")
+
+        for attempt in range(1, self.MAX_ATTEMPTS + 1):
+            pw = input(f"  Passcode [{attempt}/{self.MAX_ATTEMPTS}]: ")
+            if self._hash(pw) == self._hash_val:
+                print("\n  Access granted. Welcome, Admin!")
+                input("  Press Enter to continue...")
+                return True
+            remaining = self.MAX_ATTEMPTS - attempt
+            if remaining > 0:
+                print(f"  Incorrect passcode. {remaining} attempt(s) remaining.\n")
+            else:
+                print("  Too many failed attempts. Access denied.")
+                input("  Press Enter to return to Role Selection...")
+        return False
+
+    def change_passcode(self):
+        clear()
+        print("\n" + "-" * 50)
+        print("           CHANGE ADMIN PASSCODE           ")
+        print("-" * 50)
+
+        current = input("  Enter current passcode: ")
+        if self._hash(current) != self._hash_val:
+            print("\n  Incorrect current passcode. Cancelled.")
+            input("  Press Enter to continue...")
+            return
+
+        while True:
+            new_pw = input("  Enter new passcode: ")
+            if len(new_pw) < 4:
+                print("  Passcode must be at least 4 characters. Try again.")
+                continue
+            confirm_pw = input("  Confirm new passcode: ")
+            if new_pw == confirm_pw:
+                self._hash_val = self._hash(new_pw)
+                print("\n  Passcode changed successfully!")
+                input("  Press Enter to continue...")
+                return
+            print("  Passcodes do not match. Try again.\n")
+
+
+# ==============================================================================
+#  INHERITANCE + POLYMORPHISM — CustomerUI and AdminUI both extend UIPanel
+# ==============================================================================
+
+class CustomerUI(UIPanel):
+    """
+    INHERITANCE: Extends abstract UIPanel; must implement run().
+    POLYMORPHISM: run() behaves completely differently from AdminUI.run().
+    ENCAPSULATION: _cart is private to the session; recreated each run().
+    """
+    def __init__(self, menu: Menu, tracker: SalesRecorder):
+        self._menu    = menu
+        self._tracker = tracker
+        self._cart    = Cart()
+
+    # ── UIPanel contract ──────────────────────────────────────────────────────
+    def run(self):
+        self._cart = Cart()
+        while True:
+            self._display_main_menu()
+            choice = self._get_int_input(1, 7)
+
+            if 1 <= choice <= 5:
+                self._browse_category(choice)
+            elif choice == 6:
+                nav = self._cart_screen()
+                if nav in ("role", "exit"):
+                    return nav
+            elif choice == 7:
+                if confirm("\nReturn to Role Selection? Your cart will be lost. (Y/N): "):
+                    return "role"
+
+    # ── Private helpers ───────────────────────────────────────────────────────
+    def _display_main_menu(self):
+        clear()
+        print("\n" + "-" * 50)
+        print("                  Value Meals            ")
+        print("-" * 50)
+        print("Menu:")
+        print("-" * 50)
+        self._menu.display()      # POLYMORPHISM: calls Menu's display()
+        print("-" * 50)
+        print("6. View Cart")
+        print("7. Return To Role Selection")
+        print("-" * 50)
+        print("Enter your choice (1-7): ", end="")
+
+    def _browse_category(self, option: int):
+        cat_name, items = self._menu.get_category(option)
+        W_NUM, W_NAME, W_PRC, W_STAT = 3, 36, 7, 22
+        W = W_NUM + W_NAME + W_PRC + W_STAT + 10
+        clear()
+        print(f"\n--- {cat_name} ---")
+        print(f"  {'#':<{W_NUM}}  {'ITEM':<{W_NAME}}  {'PRICE':>{W_PRC}}   {'STATUS':<{W_STAT}}")
+        print("  " + "-" * W)
+        for idx, item in enumerate(items, 1):
+            print(f"  {idx:<{W_NUM}}  {item.name:<{W_NAME}}  {'P'+str(item.price):>{W_PRC}}   {item.get_status():<{W_STAT}}")
+        print("  " + "-" * W)
+
+        while True:
+            raw = input("\nEnter item number to add (or 0 to go back): ")
+            try:
+                num = int(raw)
+                if num == 0:
+                    break
+                if 1 <= num <= len(items):
+                    selected = items[num - 1]
+                    if not selected.is_available():
+                        print(f"Sorry, '{selected.name}' is OUT OF STOCK.")
+                        continue
+                    qty = int(input("Enter quantity: "))
+                    if qty <= 0:
+                        print("Quantity must be positive.")
+                        continue
+                    in_cart   = self._cart.quantity_in_cart(selected.name)
+                    available = selected.stock - in_cart
+                    if qty > available:
+                        if available <= 0:
+                            print("You already have all available stock in your cart.")
+                        else:
+                            print(f"Only {available} more unit(s) can be added (stock: {selected.stock}).")
+                        continue
+                    self._cart.add(selected, qty)
+                    print(f"Added {qty}x {selected.name} to cart!")
+                else:
+                    print("Invalid item number.")
+            except ValueError:
+                print("Invalid input.")
+
+    def _cart_screen(self):
+        if self._cart.is_empty():
+            clear()
+            print("\nYour cart is empty.")
+            input("\nPress Enter to continue...")
+            return "main"
+
+        while True:
+            clear()
+            self._cart.display()    # POLYMORPHISM: Cart's display()
+            print("\n1. Remove item")
+            print("2. Modify quantity")
+            print("3. Checkout")
+            print("4. Back to menu")
+            choice = input("Enter your choice (1-4): ")
+
+            if choice == "1":
+                clear()
+                self._cart.display()
+                try:
+                    num = int(input("Enter item number to remove: "))
+                    if 1 <= num <= len(self._cart.items):
+                        name = self._cart.items[num - 1].menu_item.name
+                        if confirm(f"Remove '{name}'? (Y/N): "):
+                            self._cart.remove(num - 1)
+                            print(f"Removed '{name}' from cart.")
+                            input("Press Enter to continue...")
+                            if self._cart.is_empty():
+                                return "main"
+                        else:
+                            print("Removal cancelled.")
+                            input("Press Enter to continue...")
+                    else:
+                        print("Invalid item number.")
+                        input("Press Enter to continue...")
+                except ValueError:
+                    print("Invalid input.")
+                    input("Press Enter to continue...")
+
+            elif choice == "2":
+                clear()
+                self._cart.display()
+                try:
+                    num = int(input("Enter item number to modify: "))
+                    if 1 <= num <= len(self._cart.items):
+                        ci    = self._cart.items[num - 1]
+                        stock = ci.menu_item.stock
+                        new_qty = int(input("Enter new quantity: "))
+                        if new_qty <= 0:
+                            print("Quantity must be positive.")
+                        elif stock == 0:
+                            print("Item is out of stock.")
+                        elif new_qty > stock:
+                            print(f"Only {stock} units available. Setting to {stock}.")
+                            self._cart.set_quantity(num - 1, stock)
+                            print("Quantity updated.")
+                        else:
+                            self._cart.set_quantity(num - 1, new_qty)
+                            print("Quantity updated.")
+                        input("Press Enter to continue...")
+                    else:
+                        print("Invalid item number.")
+                        input("Press Enter to continue...")
+                except ValueError:
+                    print("Invalid input.")
+                    input("Press Enter to continue...")
+
+            elif choice == "3":
+                nav = self._checkout()
+                if nav:
+                    return nav
+
+            elif choice == "4":
+                return "main"
+
+            else:
+                print("Invalid choice.")
+                input("Press Enter to continue...")
+
+    def _checkout(self):
+        clear()
+        print("\n" + "-" * 60)
+        print("                    JOLLI-BAE RESTAURANT              ")
+        print("                   Contact: (02) 8123-4567            ")
+        print("                  Email: jolli-bae@email.com          ")
+        print("-" * 60)
+        print("                      ORDER RECEIPT                   ")
+        print("-" * 60)
+
+        for idx, ci in enumerate(self._cart.items, 1):
+            print(f"{idx}.", end=" ")
+            ci.display()            # POLYMORPHISM: CartItem's display()
+
+        print("-" * 60)
+        print(f"TOTAL AMOUNT DUE: P{self._cart.total()}")
+        print("-" * 60)
+
+        if not confirm("\nConfirm checkout? (Y/N): "):
+            print("Checkout cancelled. Returning to cart.")
+            input("\nPress Enter to continue...")
+            return None
+
+        self._tracker.record_sale(self._cart)
+        for ci in self._cart.items:
+            ci.menu_item.deduct(ci.quantity)
+
+        print("\n        Thank you for your order at Jolli-Bae!        ")
+        print("              We appreciate your business!            ")
+        print("           Visit us again soon. Enjoy your meal!      ")
+        print("-" * 60 + "\n")
+
+        self._cart.clear()
+
+        clear()
+        print("-" * 50)
+        print("         Where would you like to go next?         ")
+        print("-" * 50)
+        print("1. Return to Main Menu")
+        print("2. Return to Role Selection")
+        print("3. Exit")
+        print("-" * 50)
+        while True:
+            post = input("Enter your choice (1-3): ")
+            if post == "1":   return "main"
+            elif post == "2": return "role"
+            elif post == "3": return "exit"
+            else: print("Invalid choice. Please enter 1, 2, or 3.")
+
+    @staticmethod
+    def _get_int_input(lo: int, hi: int) -> int:
+        while True:
+            try:
+                val = int(input())
+                if lo <= val <= hi:
+                    return val
+                print(f"Please enter a number between {lo} and {hi}: ", end="")
+            except ValueError:
+                print(f"Invalid input. Please enter a number between {lo} and {hi}: ", end="")
+
+
+class AdminUI(UIPanel):
+    """
+    INHERITANCE: Extends abstract UIPanel; must implement run().
+    POLYMORPHISM: run() provides a completely different interface from CustomerUI.
+    """
+    def __init__(self, menu: Menu, tracker: SalesRecorder, auth: Authenticatable):
+        self._menu    = menu
+        self._tracker = tracker
+        self._auth    = auth
+
+    # ── UIPanel contract ──────────────────────────────────────────────────────
+    def run(self):
+        while True:
+            clear()
+            print("\n" + "-" * 55)
+            print("                  ADMIN STAFF PANEL                 ")
+            print("-" * 55)
+            print("1. View & Manage Stock")
+            print("2. Sales Analytics")
+            print("3. Change Passcode")
+            print("4. Return to Role Selection")
+            print("-" * 55)
+            choice = input("Enter your choice (1-4): ").strip()
+
+            if choice == "1":   self._stock_menu()
+            elif choice == "2": self._sales_analytics()
+            elif choice == "3": self._auth.change_passcode()
+            elif choice == "4": break
+            else:
+                print("Invalid choice.")
+                input("Press Enter to continue...")
+
+    def _stock_menu(self):
+        all_items = self._menu.all_items()
+        while True:
+            clear()
+            print("\n" + "-" * 72)
+            print(f"  {'#':<4} {'ITEM':<43} {'PRICE':>7}  {'STOCK':>5}  STATUS")
+            print("-" * 72)
+            for idx, item in enumerate(all_items, 1):
+                if item.stock == 0:   status = "OUT OF STOCK"
+                elif item.stock <= 5: status = f"Low  ({item.stock})"
+                else:                 status = f"OK   ({item.stock})"
+                print(f"  {idx:<4} {item.name:<43} {'P'+str(item.price):>7}  {item.stock:>5}  {status}")
+            print("-" * 72)
+            print("\n1. Restock an item")
+            print("2. Back to Admin Menu")
+            action = input("Enter your choice (1-2): ").strip()
+
+            if action == "1":
+                try:
+                    num = int(input("Enter item number to restock: "))
+                    if 1 <= num <= len(all_items):
+                        self._restock_item(all_items[num - 1])
+                    else:
+                        print("Invalid item number.")
+                        input("Press Enter to continue...")
+                except ValueError:
+                    print("Invalid input.")
+                    input("Press Enter to continue...")
+            elif action == "2":
+                break
+            else:
+                print("Invalid choice.")
+                input("Press Enter to continue...")
+
+    def _restock_item(self, item: MenuItem):
+        clear()
+        print(f"\nRestocking: {item.name}")
+        print(f"  Current stock  : {item.stock}")
+        print(f"  Default qty    : {item.restock_qty} units")
+        print(f"  Cost per unit  : P{item.restock_price}")
+        print(f"  Default cost   : P{item.restock_cost()}")
+
+        custom = input("\nEnter custom quantity to restock (or press Enter for default): ").strip()
+        try:
+            qty = int(custom) if custom != "" else item.restock_qty
+        except ValueError:
+            print("Invalid input. Using default quantity.")
+            qty = item.restock_qty
+
+        print(f"\nThis will add {qty} units at a total cost of P{item.restock_cost(qty)}.")
+        if confirm("Confirm restock? (Y/N): "):
+            item.restock(qty)
+            print(f"Restocked! New stock for '{item.name}': {item.stock}")
+        else:
+            print("Restock cancelled.")
+        input("Press Enter to continue...")
+
+    def _sales_analytics(self):
+        clear()
+        all_items    = self._menu.all_items()
+        sorted_items = sorted(all_items, key=lambda i: i.sold, reverse=True)
+
+        print("\n" + "=" * 70)
+        print("                    SALES ANALYTICS REPORT                    ")
+        print("=" * 70)
+        print(f"\n  {'RANK':<5} {'ITEM':<43} {'SOLD':>6} {'REVENUE':>10}")
+        print("-" * 70)
+        for rank, item in enumerate(sorted_items, 1):
+            print(f"  {rank:<5} {item.name:<43} {item.sold:>6}  P{item.sold * item.price:>9}")
+        print("-" * 70)
+
+        top  = [i for i in sorted_items[:3] if i.sold > 0]
+        slow = [i for i in sorted_items if i.sold == 0]
+
+        print("\nTOP SELLERS:")
+        if top:
+            for item in top:
+                print(f"   - {item.name} ({item.sold} sold)")
+        else:
+            print("   No sales recorded yet.")
+
+        print("\nITEMS WITH NO SALES:")
+        if slow:
+            for item in slow[:5]:
+                print(f"   - {item.name}")
+            if len(slow) > 5:
+                print(f"   ... and {len(slow)-5} more.")
+        else:
+            print("   All items have sales!")
+
+        health, msg = self._tracker.health_status()
+
+        print("\n" + "=" * 70)
+        print("                   FINANCIAL SUMMARY                          ")
+        print("=" * 70)
+        print(f"  Total Revenue  : P{self._tracker.total_revenue:,.2f}")
+        print(f"  Est. COGS      : P{self._tracker.total_cogs:,.2f}")
+        print(f"  Gross Profit   : P{self._tracker.gross_profit():,.2f}")
+        print(f"  Profit Margin  : {self._tracker.profit_margin():.1f}%")
+        print("-" * 70)
+        print(f"\n  Business Health: {health}")
+        print(f"  {msg}")
+        print("=" * 70)
+
+        oos_cost = sum(i.restock_cost() for i in all_items if i.stock == 0)
+        if oos_cost > 0:
+            print(f"\n  Total cost to restock all out-of-stock items: P{oos_cost:,}")
+
+        input("\nPress Enter to return to Admin Menu...")
+
+
+# ==============================================================================
+#  ENCAPSULATION — Restaurant orchestrates all components via private refs
+# ==============================================================================
+
+class Restaurant:
+    """
+    ENCAPSULATION: All sub-systems are private (_menu, _tracker, etc.).
+    POLYMORPHISM: Calls .run() on CustomerUI or AdminUI — same method name,
+                  entirely different behaviour (UIPanel polymorphism).
+    """
+    def __init__(self):
+        self._menu     = Menu()
+        self._tracker  = SalesTracker()
+        self._auth     = AdminAuth(default_passcode="admin1234")
+        self._customer = CustomerUI(self._menu, self._tracker)
+        self._admin    = AdminUI(self._menu, self._tracker, self._auth)
+
+    def run(self):
+        clear()
+        print("\n" + "-" * 57)
+        print("                Welcome To Jolli-Bae            ")
+        print("Your EX might be salty, but our chicken is always crispy!")
+        print("-" * 57)
+        input("Press Enter to continue...")
+
+        while True:
+            self._display_role_menu()
+            choice = self._get_role_choice()
+
+            if choice == 1:
+                # POLYMORPHISM: CustomerUI.run() via UIPanel reference
+                nav = self._customer.run()
+                if nav == "exit":
+                    if confirm("\nAre you sure you want to exit the program? (Y/N): "):
+                        self._goodbye()
+            elif choice == 2:
+                if self._auth.verify():
+                    # POLYMORPHISM: AdminUI.run() via UIPanel reference
+                    self._admin.run()
+            elif choice == 3:
+                if confirm("\nAre you sure you want to exit the program? (Y/N): "):
+                    self._goodbye()
+
+    @staticmethod
+    def _display_role_menu():
+        clear()
+        print("\n")
+        print("         Select Your Role         ")
+        print("-" * 50)
+        print("1. Customer")
+        print("2. Admin Staff")
+        print("3. Exit")
+        print("-" * 50)
+        print("Enter your choice (1-3): ", end="")
+
+    @staticmethod
+    def _get_role_choice() -> int:
+        while True:
+            try:
+                val = int(input())
+                if 1 <= val <= 3:
+                    return val
+                print("Invalid input. Please enter a number between 1 and 3: ", end="")
+            except ValueError:
+                print("Invalid input. Please enter a number between 1 and 3: ", end="")
+
+    @staticmethod
+    def _goodbye():
+        clear()
+        print("\nThank you for using the system. Goodbye!")
+        sys.exit(0)
+
+
+# ==============================================================================
+#  Utilities
+# ==============================================================================
+
+def clear():
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def confirm(prompt: str = "Are you sure? (Y/N): ") -> bool:
+    while True:
+        ans = input(prompt).strip().upper()
+        if ans in ("Y", "N"):
+            return ans == "Y"
+        print("Please enter Y or N.")
+
+
+# ==============================================================================
+#  Entry Point
+# ==============================================================================
+
+if __name__ == "__main__":
+    restaurant = Restaurant()
+    restaurant.run()
